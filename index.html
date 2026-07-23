@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POP-WORD — The Truth of the Truth</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a45c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2.5c.7 5 2.5 6.8 7.5 7.5-5 .7-6.8 2.5-7.5 7.5-.7-5-2.5-6.8-7.5-7.5 5-.7 6.8-2.5 7.5-7.5z' fill='%23c9a45c' stroke='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="dark">
+
+<div id="veil" aria-hidden="true"></div>
+
+<header id="topbar">
+  <button id="brand" title="Home">
+    <span class="brand-mark" id="brand-mark"></span>
+    <span class="brand-name">POP<span class="brand-dot">·</span>WORD</span>
+  </button>
+  <div class="topbar-controls">
+    <button id="btn-font-minus" class="ctl" title="Smaller text">A−</button>
+    <button id="btn-font-plus" class="ctl" title="Larger text">A+</button>
+    <button id="btn-music" class="ctl" title="Background music"></button>
+    <button id="btn-sound" class="ctl" title="Interaction sounds"></button>
+    <button id="btn-theme" class="ctl" title="Light / dark"></button>
+  </div>
+</header>
+
+<main id="view" tabindex="-1"></main>
+
+<aside id="lexicon-panel" aria-hidden="true">
+  <div class="lex-head">
+    <span class="lex-title" id="lex-title">Lexicon</span>
+    <button id="lex-close" class="ctl" title="Close"></button>
+  </div>
+  <div id="lex-body"></div>
+</aside>
+<div id="lexicon-scrim" aria-hidden="true"></div>
+
+<footer id="colophon">
+  <span>“Sanctify them in your truth. Your word is truth.” — John 17:17</span>
+</footer>
+
+<!-- Data layer (offline, embedded) -->
+<script src="data/registry.js"></script>
+<script src="data/lexicon-hebrew.js"></script>
+<script src="data/lexicon-greek.js"></script>
+<script src="data/books/zephaniah.js"></script>
+<script src="data/books/haggai.js"></script>
+<script src="data/books/zechariah.js"></script>
+<script src="data/books/malachi.js"></script>
+<script src="data/books/matthew.js"></script>
+<script src="data/books/mark.js"></script>
+<script src="data/books/luke.js"></script>
+<script src="data/books/john.js"></script>
+<script src="data/books/acts.js"></script>
+<script src="data/books/romans.js"></script>
+<script src="data/books/1corinthians.js"></script>
+<script src="data/books/2corinthians.js"></script>
+<script src="data/books/galatians.js"></script>
+<script src="data/books/ephesians.js"></script>
+<script src="data/books/philippians.js"></script>
+<script src="data/books/colossians.js"></script>
+<script src="data/books/1thessalonians.js"></script>
+<script src="data/books/2thessalonians.js"></script>
+<script src="data/books/1timothy.js"></script>
+<script src="data/books/2timothy.js"></script>
+<script src="data/books/titus.js"></script>
+<script src="data/books/philemon.js"></script>
+<script src="data/books/hebrews.js"></script>
+<script src="data/books/james.js"></script>
+<script src="data/books/1peter.js"></script>
+<script src="data/books/2peter.js"></script>
+<script src="data/books/1john.js"></script>
+<script src="data/books/2john.js"></script>
+<script src="data/books/3john.js"></script>
+<script src="data/books/jude.js"></script>
+<script src="data/books/revelation.js"></script>
+
+<!-- App -->
+<script src="js/icons.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/music.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
