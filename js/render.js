@@ -26,6 +26,8 @@ window.POPRender = (function () {
     return first.charAt(0).toUpperCase() === 'G' ? 'Greek' : 'Hebrew';
   }
   /* a section header with a leading icon badge */
+  /* Theme titles are written with or without their own quotation marks; the app adds them, so strip any. */
+  function unq(s) { return String(s == null ? '' : s).trim().replace(/^[“"']+|[”"']+$/g, ''); }
   function hd(name, text) { return '<span class="sec-ico">' + ico(name) + '</span>' + text; }
   /* a document title with a leading icon */
   function tt(name, text) { return '<span class="doc-ico">' + ico(name) + '</span>' + text; }
@@ -98,7 +100,7 @@ window.POPRender = (function () {
       stations.push({
         key: String(i), kind: 'Chapter ' + i,
         title: ch ? ch.chapterTitle : 'Chapter ' + i,
-        sub: ch ? '“' + ch.themeTitle + '”' : ''
+        sub: ch ? '“' + unq(ch.themeTitle) + '”' : ''
       });
     }
     stations.push({
@@ -164,7 +166,7 @@ window.POPRender = (function () {
       '<p class="app-intro">' + esc(d.truths.intro) + '</p>' + titledBlocks(d.truths.items, true));
     h += section(++i, hd('sprout', 'Experiential Preparation'),
       '<p class="app-intro">' + esc(d.preparation.intro) + '</p>' + titledBlocks(d.preparation.items, false, 'leaf-block'));
-    h += section(++i, hd('hands', 'Prayer of Activation'), '<div class="prayer">“' + nl(d.prayerOfActivation) + '”</div>');
+    h += section(++i, hd('hands', 'Prayer of Activation'), '<div class="prayer">“' + nl(unq(d.prayerOfActivation)) + '”</div>');
     return docShell(h, opts);
   }
 
@@ -175,7 +177,7 @@ window.POPRender = (function () {
     h += '<div class="doc-kind">Chapter Study</div></div>';
     var i = 0;
 
-    h += section(++i, hd('target', 'Theme Title'), '<p class="lead-cap" style="font-size:1.25em;font-style:italic">“' + esc(d.themeTitle) + '”</p>');
+    h += section(++i, hd('target', 'Theme Title'), '<p class="lead-cap" style="font-size:1.25em;font-style:italic">“' + esc(unq(d.themeTitle)) + '”</p>');
 
     var sv = '<div class="scripture-frame">';
     (d.scripture || []).forEach(function (v) {
@@ -225,7 +227,7 @@ window.POPRender = (function () {
     la += '<p class="app-intro" style="margin-top:1.6rem">' + esc(d.lifeApplication.practicesIntro) + '</p>' + titledBlocks(d.lifeApplication.practices, false, 'leaf-block');
     h += section(++i, hd('sprout', 'Life Application'), la);
 
-    h += section(++i, hd('hands', 'Prayer Reflection'), '<div class="prayer">“' + nl(d.prayerReflection) + '”</div>');
+    h += section(++i, hd('hands', 'Prayer Reflection'), '<div class="prayer">“' + nl(unq(d.prayerReflection)) + '”</div>');
 
     if (d.storyConnections && d.storyConnections.length) {
       h += section(++i, hd('bookOpen', 'Story Connections'),
@@ -267,7 +269,7 @@ window.POPRender = (function () {
           '<span class="med-label">The Practice</span><p>' + esc(s.practice) + '</p></div>';
       }).join(''));
 
-    h += section(++i, hd('hands', 'Final Declaration Over Your Life'), '<div class="prayer">“' + nl(d.finalDeclaration) + '”</div>');
+    h += section(++i, hd('hands', 'Final Declaration Over Your Life'), '<div class="prayer">“' + nl(unq(d.finalDeclaration)) + '”</div>');
     return docShell(h, opts);
   }
 
