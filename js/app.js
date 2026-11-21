@@ -35,6 +35,7 @@
   function route() {
     var hash = location.hash.replace(/^#\/?/, '');
     var parts = hash.split('/').filter(Boolean);
+    closeLexicon(); // a page change (including Back) never leaves the panel over the new page
     veil.classList.add('on');
     setTimeout(function () {
       if (parts[0] === 'book' && parts[1]) renderJourney(parts[1]);
@@ -44,12 +45,27 @@
       view.focus({ preventScroll: true });
       window.scrollTo(0, 0);
       observeReveals();
+      if (parts[0] === 'read' && parts[3]) focusVerse(parts[3]);
     }, 180);
   }
 
   function go(hash) {
     if (window.POPSound) POPSound.pageTurn();
     if (location.hash === hash) route(); else location.hash = hash;
+  }
+
+  /* #/read/<book>/<chapter>/<verse> opens the chapter at that verse, unfolded. */
+  function focusVerse(v) {
+    if (!/^\d+$/.test(v)) return;
+    var b = view.querySelector('.verse[data-verse="' + v + '"]');
+    var x = view.querySelector('[data-verse-x="' + v + '"]');
+    if (!b || !x) return;
+    var sec = b.closest('.reveal');
+    if (sec) sec.classList.add('seen');
+    b.classList.add('open', 'flash');
+    x.classList.add('open');
+    b.scrollIntoView({ block: 'center' });
+    setTimeout(function () { b.classList.remove('flash'); }, 2400);
   }
 
   /* ── Views ────────────────────────────────────────────────── */
@@ -117,8 +133,9 @@
   }
 
   /* ── Lexicon panel ────────────────────────────────────────── */
-  function openLexicon(strongsId) {
-    lexBody.innerHTML = POPRender.lexEntry(strongsId);
+  function openLexicon(strongsId, ctx) {
+    lexBody.innerHTML = POPRender.lexEntry(strongsId, ctx);
+    lexBody.scrollTop = 0;
     lexPanel.classList.add('open');
     lexScrim.classList.add('open');
     lexPanel.setAttribute('aria-hidden', 'false');
@@ -133,13 +150,38 @@
   lexScrim.addEventListener('click', closeLexicon);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLexicon(); });
 
+  /* Inside the panel: compare family words, open a reference, show the full concordance. */
+  lexBody.addEventListener('click', function (e) {
+    var t;
+    if ((t = e.target.closest('[data-jump]'))) {
+      e.preventDefault();
+      closeLexicon();
+      go(t.getAttribute('data-jump'));
+      return;
+    }
+    if ((t = e.target.closest('[data-more]'))) {
+      var c = t.closest('.ws-conc');
+      if (c) c.classList.add('all');
+      t.remove();
+      return;
+    }
+    if ((t = e.target.closest('[data-strongs]'))) {
+      var p = (t.getAttribute('data-ctx') || '').split('|');
+      openLexicon(t.getAttribute('data-strongs'), p.length === 4 ? { book: p[0], ch: p[1], v: p[2], en: p[3] } : null);
+    }
+  });
+
   /* ── Delegated clicks ─────────────────────────────────────── */
   view.addEventListener('click', function (e) {
     var t;
 
     if ((t = e.target.closest('[data-strongs]'))) {
       e.stopPropagation();
-      openLexicon(t.getAttribute('data-strongs'));
+      var vx = t.closest('[data-verse-x]');
+      openLexicon(t.getAttribute('data-strongs'), vx ? {
+        book: view.getAttribute('data-book'), ch: view.getAttribute('data-doc'),
+        v: vx.getAttribute('data-verse-x'), en: t.getAttribute('data-en') || ''
+      } : null);
       return;
     }
     if ((t = e.target.closest('.verse'))) {

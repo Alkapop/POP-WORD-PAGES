@@ -597,6 +597,43 @@ body::after {
 .lex-online:hover { border-color: var(--gold); box-shadow: 0 0 16px rgba(201,164,92,0.3); }
 .lex-note { margin-top: 0.8rem; text-align: center; font-size: 0.78rem; color: var(--ink-faint); font-style: italic; }
 
+/* ── Word study (verse context · word family · site concordance) ── */
+.ws-block { margin: 1.3rem 0; padding: 1rem 1.05rem; border: 1px solid var(--gold-dim); border-radius: 12px; background: var(--bg-raised); }
+.ws-label { display: block; font-family: var(--font-ui); font-size: 0.64rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.55rem; }
+.ws-sub { display: block; font-family: var(--font-ui); font-size: 0.74rem; line-height: 1.5; color: var(--ink-soft); margin: 0.7rem 0 0.45rem; }
+.ws-rendered { font-size: 0.92rem; color: var(--ink-soft); margin-bottom: 0.45rem; }
+.ws-rendered b { color: var(--gold-bright); font-weight: 600; }
+.ws-text { font-style: italic; font-size: 0.98rem; line-height: 1.6; }
+.ws-block mark { background: color-mix(in srgb, var(--gold) 26%, transparent); color: inherit; border-radius: 3px; padding: 0 0.12em; font-style: normal; }
+.ws-intro { font-size: 0.92rem; color: var(--ink-soft); margin-bottom: 0.7rem; }
+.ws-sibs { margin-top: 0.8rem; padding-top: 0.7rem; border-top: 1px dashed var(--gold-dim); }
+.ws-sib { display: inline-flex; align-items: baseline; gap: 0.3rem; margin: 0.2rem 0.3rem 0.2rem 0; padding: 0.35rem 0.65rem; border: 1px solid var(--gold-dim); border-radius: 999px; background: var(--bg-inset); color: var(--ink); font: inherit; font-size: 0.86rem; cursor: pointer; }
+.ws-sib:hover, .ws-member:hover, .ws-ref:hover { border-color: var(--gold); }
+.ws-sib .heb, .ws-member .heb { font-family: var(--font-hebrew); color: var(--gold-bright); font-size: 1.1em; }
+.ws-m-tr { font-style: italic; color: var(--ink-soft); }
+.ws-member { display: block; width: 100%; text-align: left; margin-top: 0.5rem; padding: 0.7rem 0.8rem; border: 1px solid transparent; border-radius: 10px; background: var(--bg-inset); color: var(--ink); font: inherit; cursor: pointer; }
+.ws-member.me { border-color: var(--gold); box-shadow: 0 0 14px rgba(201,164,92,0.18); }
+.ws-m-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
+.ws-m-head .strong-id { font-family: var(--font-ui); font-size: 0.68rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+.ws-here { margin-left: auto; font-family: var(--font-ui); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bg); background: var(--gold); border-radius: 999px; padding: 0.12rem 0.5rem; }
+.ws-m-sense { display: block; font-size: 0.9rem; margin-top: 0.3rem; }
+.ws-m-anchor { display: block; font-size: 0.84rem; color: var(--ink-soft); font-style: italic; margin-top: 0.3rem; }
+.ws-m-anchor b { font-style: normal; font-family: var(--font-ui); font-size: 0.76rem; color: var(--gold); letter-spacing: 0.04em; }
+.ws-renders { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.ws-render { font-size: 0.84rem; padding: 0.18rem 0.55rem; border-radius: 999px; background: var(--bg-inset); border: 1px solid var(--gold-dim); }
+.ws-render i { font-style: normal; font-family: var(--font-ui); font-size: 0.72rem; color: var(--gold); margin-left: 0.15rem; }
+.ws-occ { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr)); gap: 0.3rem; margin-top: 0.8rem; }
+.ws-ref { display: flex; flex-direction: column; text-align: left; line-height: 1.35; padding: 0.35rem 0.5rem; border: 1px solid var(--gold-dim); border-radius: 8px; background: var(--bg-inset); color: var(--ink); font: inherit; font-size: 0.82rem; cursor: pointer; min-width: 0; }
+.ws-ref span:first-child { font-family: var(--font-ui); font-size: 0.74rem; color: var(--gold); letter-spacing: 0.03em; }
+.ws-ref-en { font-style: italic; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-ref.here { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--bg-inset)); }
+.ws-ref.extra { display: none; }
+.ws-conc.all .ws-ref.extra { display: flex; }
+.ws-more { display: block; margin: 0.7rem auto 0; padding: 0.4rem 1rem; border: 1px solid var(--gold-dim); border-radius: 999px; background: none; color: var(--gold); font-family: var(--font-ui); font-size: 0.74rem; letter-spacing: 0.1em; cursor: pointer; }
+.verse.flash { animation: verse-flash 2.4s ease-out; }
+@keyframes verse-flash { 0%, 30% { background: color-mix(in srgb, var(--gold) 30%, transparent); } 100% { background: color-mix(in srgb, var(--gold) 10%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .verse.flash { animation: none; } }
+
 /* ── Footer ──────────────────────────────────────────────────── */
 #colophon {
   position: relative; z-index: 1;
