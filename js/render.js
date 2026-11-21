@@ -186,12 +186,12 @@ window.POPRender = (function () {
       sv += '<span class="u-label">Understanding · v. ' + v.v + '</span>' + nl(v.understanding);
       if (v.words && v.words.length) {
         sv += '<div class="word-chips">' + v.words.map(function (w) {
-          return '<button class="chip" data-strongs="' + esc(w.strongs) + '"><span class="heb">' + esc(w.hebrew) + '</span><span>' + esc(w.translit) + '</span><span class="strong-id">' + esc(w.strongs) + '</span></button>';
+          return '<button class="chip" data-strongs="' + esc(w.strongs) + '" data-en="' + esc(w.english || '') + '"><span class="heb">' + esc(w.hebrew) + '</span><span>' + esc(w.translit) + '</span><span class="strong-id">' + esc(w.strongs) + '</span></button>';
         }).join('') + '</div>';
       }
       sv += '</div></div>';
     });
-    sv += '</div><p class="lex-note" style="text-align:center;margin-top:0.7rem;font-style:italic;color:var(--ink-faint);font-size:0.82rem">Tap any verse to open its understanding. Tap a Hebrew word to open the lexicon.</p>';
+    sv += '</div><p class="lex-note" style="text-align:center;margin-top:0.7rem;font-style:italic;color:var(--ink-faint);font-size:0.82rem">Tap any verse to open its understanding. Tap a Greek or Hebrew word to see its meaning, its word family, and everywhere it is used.</p>';
     h += section(++i, hd('scroll', 'Full Scripture — ' + esc(d.book) + ' ' + d.chapter + ' (Focus Study Translation)'), sv);
 
     h += section(++i, hd('eye', 'Visual Meditations (Clarifying the Imagery)'),
@@ -273,19 +273,149 @@ window.POPRender = (function () {
     return docShell(h, opts);
   }
 
+  /* ── Word study: the verse, the word family, the site concordance ── */
+  /* One English word ("power", "time", "love") often stands for several original words.
+     The panel shows which one is in this verse, its siblings (sources/word-families.json),
+     and every place the same Strong's word is tagged across the published studies. */
+  var famIndex = null, concIndex = null;
+  function dictEntry(key) {
+    var dict = key.charAt(0) === 'H' ? window.strongsHebrewDictionary : window.strongsGreekDictionary;
+    return dict ? dict[key] : null;
+  }
+  function idsOf(s) { return String(s || '').toUpperCase().match(/[HG]\d+/g) || []; }
+  function families(key) {
+    if (!famIndex) {
+      famIndex = {};
+      (window.POP_FAMILIES || []).forEach(function (f) {
+        (f.members || []).forEach(function (m) { (famIndex[m.strongs] = famIndex[m.strongs] || []).push(f); });
+      });
+    }
+    return famIndex[key] || [];
+  }
+  function concordance() {
+    if (concIndex) return concIndex;
+    concIndex = {};
+    (window.POP.books || []).slice().sort(function (a, b) { return a.order - b.order; }).forEach(function (b) {
+      var c = window.POP.content[b.id];
+      if (!c || !c.chapters) return;
+      c.chapters.forEach(function (ch, ci) {
+        (ch.scripture || []).forEach(function (v) {
+          (v.words || []).forEach(function (w) {
+            idsOf(w.strongs).forEach(function (id) {
+              (concIndex[id] = concIndex[id] || []).push({ book: b.id, name: b.name, ch: ci + 1, v: v.v, en: w.english || '' });
+            });
+          });
+        });
+      });
+    });
+    return concIndex;
+  }
+  function findVerse(book, ch, v) {
+    var c = window.POP.content[book];
+    var d = c && c.chapters ? c.chapters[parseInt(ch, 10) - 1] : null;
+    var list = (d && d.scripture) || [];
+    for (var i = 0; i < list.length; i++) if (String(list[i].v) === String(v)) return list[i];
+    return null;
+  }
+  function bookName(id) {
+    var b = (window.POP.books || []).find(function (x) { return x.id === id; });
+    return b ? b.name : id;
+  }
+  function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  /* Escape a verse and highlight the English rendering of the word (first match). */
+  function markText(text, en) {
+    var out = esc(text);
+    var phrases = String(en || '').replace(/\([^)]*\)/g, ' ').split(/[\/,;]/)
+      .map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 1; });
+    var tries = phrases.slice().sort(function (a, b) { return b.length - a.length; });
+    phrases.forEach(function (p) { p.split(/\s+/).forEach(function (w) { if (w.length > 3) tries.push(w); }); });
+    for (var i = 0; i < tries.length; i++) {
+      var re = new RegExp('(^|[^A-Za-z])(' + reEsc(esc(tries[i])) + ')(?![A-Za-z])', 'i');
+      if (re.test(out)) return out.replace(re, '$1<mark>$2</mark>');
+    }
+    return out;
+  }
+
+  function verseBlock(key, ctx) {
+    var v = findVerse(ctx.book, ctx.ch, ctx.v);
+    if (!v) return '';
+    var h = '<div class="ws-block ws-verse"><span class="ws-label">In this verse · ' + esc(bookName(ctx.book)) + ' ' + esc(ctx.ch) + ':' + esc(ctx.v) + '</span>';
+    if (ctx.en) h += '<div class="ws-rendered">Translated here as <b>‘' + esc(ctx.en) + '’</b></div>';
+    h += '<p class="ws-text">' + markText(v.text, ctx.en) + '</p>';
+    families(key).forEach(function (f) {
+      var ids = f.members.map(function (m) { return m.strongs; });
+      var sibs = (v.words || []).filter(function (w) {
+        return idsOf(w.strongs).some(function (x) { return x !== key && ids.indexOf(x) >= 0; });
+      });
+      if (!sibs.length) return;
+      h += '<div class="ws-sibs"><span class="ws-sub">This verse uses ' + (sibs.length + 1) + ' words from the ' + esc(f.name) + ' family — tap one to compare</span>';
+      h += sibs.map(function (w) {
+        return '<button class="ws-sib" data-strongs="' + esc(w.strongs) + '" data-ctx="' + esc([ctx.book, ctx.ch, ctx.v, w.english || ''].join('|')) + '">' +
+          '<span class="heb">' + esc(w.hebrew) + '</span> <span class="ws-m-tr">' + esc(w.translit) + '</span> → ‘' + esc(w.english) + '’</button>';
+      }).join('');
+      h += '</div>';
+    });
+    return h + '</div>';
+  }
+
+  function familyBlock(key) {
+    return families(key).map(function (f) {
+      var h = '<div class="ws-block ws-family"><span class="ws-label">Word family · ' + esc(f.name) + '</span>';
+      h += '<p class="ws-intro">' + esc(f.intro) + '</p>';
+      h += f.members.map(function (m) {
+        var e = dictEntry(m.strongs), me = m.strongs === key;
+        return '<button class="ws-member' + (me ? ' me' : '') + '" data-strongs="' + esc(m.strongs) + '">' +
+          '<span class="ws-m-head"><span class="heb">' + esc(e ? e.lemma : '') + '</span>' +
+          '<span class="ws-m-tr">' + esc(e ? (e.xlit || e.translit || '') : '') + '</span>' +
+          '<span class="strong-id">' + esc(m.strongs) + '</span>' + (me ? '<span class="ws-here">this word</span>' : '') + '</span>' +
+          '<span class="ws-m-sense">' + esc(m.sense) + '</span>' +
+          '<span class="ws-m-anchor"><b>' + esc(m.anchor) + '</b>' + (m.text ? ' — ' + markText(m.text, m.en) : '') + '</span></button>';
+      }).join('');
+      return h + '</div>';
+    }).join('');
+  }
+
+  function concordanceBlock(key, ctx) {
+    var all = concordance()[key] || [];
+    var h = '<div class="ws-block ws-conc">';
+    if (!all.length) {
+      return h + '<span class="ws-label">Across POP·WORD</span><p class="ws-intro">Not tagged yet in a published study. As more books are written, every place this word is tagged will appear here.</p></div>';
+    }
+    var isHere = function (o) { return ctx && o.book === ctx.book && String(o.ch) === String(ctx.ch) && String(o.v) === String(ctx.v); };
+    var list = all.filter(isHere).concat(all.filter(function (o) { return !isHere(o); }));
+    var books = {}, counts = {};
+    all.forEach(function (o) {
+      books[o.book] = 1;
+      var k = String(o.en || '—').toLowerCase().trim();
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    var nb = Object.keys(books).length;
+    h += '<span class="ws-label">Across POP·WORD · tagged ' + all.length + '× in ' + nb + ' book' + (nb > 1 ? 's' : '') + '</span>';
+    h += '<div class="ws-sub">Translated as</div><div class="ws-renders">' + Object.keys(counts)
+      .sort(function (a, b) { return counts[b] - counts[a]; })
+      .map(function (r) { return '<span class="ws-render">‘' + esc(r) + '’ <i>' + counts[r] + '</i></span>'; }).join('') + '</div>';
+    h += '<div class="ws-occ">' + list.map(function (o, i) {
+      return '<button class="ws-ref' + (isHere(o) ? ' here' : '') + (i >= 12 ? ' extra' : '') + '" data-jump="#/read/' + esc(o.book) + '/' + o.ch + '/' + esc(o.v) + '">' +
+        '<span>' + esc(o.name) + ' ' + o.ch + ':' + esc(o.v) + '</span><span class="ws-ref-en">‘' + esc(o.en) + '’</span></button>';
+    }).join('') + '</div>';
+    if (list.length > 12) h += '<button class="ws-more" data-more="1">Show all ' + list.length + '</button>';
+    h += '<p class="lex-note">Counts the places this word is tagged in these studies, not every occurrence in the Bible. Tap a reference to open that verse.</p>';
+    return h + '</div>';
+  }
+
   /* ── Lexicon panel body ───────────────────────────────────── */
   /* Accepts a single ID ("H2555") or a compound citation ("H7760 / H3824") —
-     compound idioms show every cited entry, stacked. */
-  function lexEntry(id) {
-    var ids = String(id).toUpperCase().match(/[HG]\d+/g) || [];
+     compound idioms show every cited entry, stacked. ctx (optional) is the verse the
+     word was tapped in: { book, ch, v, en }. */
+  function lexEntry(id, ctx) {
+    var ids = idsOf(id);
     var h = '';
     if (!ids.length) {
       h += '<p style="text-align:center;color:var(--ink-soft)">No Strong&#39;s number found in “' + esc(id) + '”.</p>';
     }
     ids.forEach(function (key, i) {
       var isHeb = key.charAt(0) === 'H';
-      var dict = isHeb ? window.strongsHebrewDictionary : window.strongsGreekDictionary;
-      var e = dict ? dict[key] : null;
+      var e = dictEntry(key);
       if (i > 0) h += '<div class="diamond-rule" style="margin:1.6rem 0">' + ico('spark') + '</div>';
       if (!e) {
         h += '<p style="text-align:center;color:var(--ink-soft)">Entry ' + esc(key) + ' was not found in the offline lexicon.</p>';
@@ -293,10 +423,13 @@ window.POPRender = (function () {
         h += '<div class="lex-lemma">' + esc(e.lemma) + '</div>';
         h += '<div class="lex-translit">' + esc(e.xlit || e.translit || '') + (e.pron ? ' · ' + esc(e.pron) : '') + '</div>';
         h += '<div class="lex-strongno">Strong&#39;s ' + esc(key) + ' · ' + (isHeb ? 'Hebrew' : 'Greek') + '</div>';
+        if (ctx && i === 0) h += verseBlock(key, ctx);
         if (e.strongs_def) h += '<div class="lex-field"><span class="fl">Strong&#39;s Definition</span><span class="fv">' + esc(e.strongs_def) + '</span></div>';
         if (e.derivation) h += '<div class="lex-field"><span class="fl">Derivation</span><span class="fv">' + esc(e.derivation) + '</span></div>';
         if (e.kjv_def) h += '<div class="lex-field"><span class="fl">Usage in the KJV</span><span class="fv">' + esc(e.kjv_def) + '</span></div>';
       }
+      h += familyBlock(key);
+      h += concordanceBlock(key, ctx);
       h += '<a class="lex-online" href="https://www.blueletterbible.org/lexicon/' + esc(key.toLowerCase()) + '" target="_blank" rel="noopener">Open ' + esc(key) + ' in Blue Letter Bible <span class="nav-ico">' + ico('external') + '</span></a>';
     });
     h += '<p class="lex-note">Entries above are fully offline. The links need internet.</p>';
